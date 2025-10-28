@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Nuevo Empleado - {{ empresa.nombre }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombres" class="form-label">Nombres *</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellidos" class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dni" class="form-label">DNI *</label>
+                                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sueldo_base" class="form-label">Sueldo Base (S/.) *</label>
+                                <input type="number" class="form-control" id="sueldo_base" name="sueldo_base" 
+                                       step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_ingreso" class="form-label">Fecha de Ingreso *</label>
+                                <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipo_pension" class="form-label">Tipo de Pensión *</label>
+                                <select class="form-select" id="tipo_pension" name="tipo_pension" required>
+                                    <option value="">Seleccione tipo de pensión</option>
+                                    <option value="ONP">ONP (Oficina de Normalización Previsional)</option>
+                                    <option value="AFP">AFP (Administradora de Fondos de Pensiones)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="afp_codigo" class="form-label">Código AFP</label>
+                                <select class="form-select" id="afp_codigo" name="afp_codigo" disabled>
+                                    <option value="">Seleccione AFP</option>
+                                    <option value="PRIMA">PRIMA</option>
+                                    <option value="INTEGRA">INTEGRA</option>
+                                    <option value="PROFUTURO">PROFUTURO</option>
+                                    <option value="HABITAT">HABITAT</option>
+                                </select>
+                                <div class="form-text">Solo aplica si selecciona AFP</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <textarea class="form-control" id="direccion" name="direccion" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Crear Empleado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Información sobre Beneficios Sociales
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6>Beneficios que aplicarán según el régimen de la empresa:</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Vacaciones:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                15 días anuales
+                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                15 días anuales
+                            {% else %}
+                                30 días anuales
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>CTS:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                NO corresponde
+                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                15 días por año
+                            {% else %}
+                                Un sueldo anual
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Gratificaciones:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                NO corresponde
+                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                Medio sueldo (Jul/Dic)
+                            {% else %}
+                                Sueldo + 9% (Jul/Dic)
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Asignación Familiar:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                NO corresponde
+                            {% else %}
+                                S/. 102.50 (si sueldo ≤ S/. 1025)
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Establecer fecha actual como fecha de ingreso
+document.getElementById('fecha_ingreso').value = new Date().toISOString().split('T')[0];
+
+// Manejar cambio de tipo de pensión
+document.getElementById('tipo_pension').addEventListener('change', function(e) {
+    const afpSelect = document.getElementById('afp_codigo');
+    if (e.target.value === 'AFP') {
+        afpSelect.disabled = false;
+        afpSelect.required = true;
+    } else {
+        afpSelect.disabled = true;
+        afpSelect.required = false;
+        afpSelect.value = '';
+    }
+});
+
+// Solo permitir números en DNI
+document.getElementById('dni').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+});
+
+// Validar DNI
+document.getElementById('dni').addEventListener('blur', function(e) {
+    const dni = e.target.value;
+    if (dni.length !== 8) {
+        e.target.setCustomValidity('El DNI debe tener 8 dígitos');
+    } else {
+        e.target.setCustomValidity('');
+    }
+});
+
+// Validar sueldo base
+document.getElementById('sueldo_base').addEventListener('input', function(e) {
+    const sueldo = parseFloat(e.target.value);
+    if (sueldo < 0) {
+        e.target.setCustomValidity('El sueldo no puede ser negativo');
+    } else {
+        e.target.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}
+

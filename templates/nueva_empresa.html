@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>Nueva Empresa
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre de la Empresa *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ruc" class="form-label">RUC *</label>
+                                <input type="text" class="form-control" id="ruc" name="ruc" maxlength="11" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="regimen_laboral" class="form-label">Régimen Laboral *</label>
+                        <select class="form-select" id="regimen_laboral" name="regimen_laboral" required>
+                            <option value="">Seleccione el régimen laboral</option>
+                            <option value="microempresa">Microempresa (REMYPE)</option>
+                            <option value="pequeña_empresa">Pequeña Empresa (REMYPE)</option>
+                            <option value="general">Régimen General</option>
+                        </select>
+                        <div class="form-text">
+                            <strong>Importante:</strong> El régimen laboral determina los beneficios sociales aplicables.
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="direccion" class="form-label">Dirección</label>
+                                <textarea class="form-control" id="direccion" name="direccion" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('empresas') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Crear Empresa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Información sobre Regímenes Laborales
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">Microempresa (REMYPE)</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-check text-success me-1"></i>Vacaciones: 15 días anuales</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i>CTS: NO corresponde</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i>Gratificaciones: NO corresponde</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i>Asignación Familiar: NO corresponde</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Pequeña Empresa (REMYPE)</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-check text-success me-1"></i>Vacaciones: 15 días anuales</li>
+                                    <li><i class="fas fa-check text-success me-1"></i>CTS: 15 días por año de servicio</li>
+                                    <li><i class="fas fa-check text-success me-1"></i>Gratificaciones: Medio sueldo (Julio/Diciembre)</li>
+                                    <li><i class="fas fa-check text-success me-1"></i>Asignación Familiar: S/. 102.50</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">Régimen General</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-check text-success me-1"></i>Vacaciones: 30 días anuales</li>
+                                    <li><i class="fas fa-check text-success me-1"></i>CTS: Un sueldo anual</li>
+                                    <li><i class="fas fa-check text-success me-1"></i>Gratificaciones: Sueldo + 9% (Julio/Diciembre)</li>
+                                    <li><i class="fas fa-check text-success me-1"></i>Asignación Familiar: S/. 102.50</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('ruc').addEventListener('input', function(e) {
+    // Solo permitir números
+    e.target.value = e.target.value.replace(/\D/g, '');
+});
+
+document.getElementById('regimen_laboral').addEventListener('change', function(e) {
+    const regimen = e.target.value;
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'alert alert-info mt-2';
+    
+    switch(regimen) {
+        case 'microempresa':
+            infoDiv.innerHTML = '<strong>Microempresa:</strong> Régimen simplificado con beneficios mínimos. Ideal para empresas pequeñas con pocos empleados.';
+            break;
+        case 'pequeña_empresa':
+            infoDiv.innerHTML = '<strong>Pequeña Empresa:</strong> Régimen intermedio con beneficios moderados. Incluye CTS y gratificaciones reducidas.';
+            break;
+        case 'general':
+            infoDiv.innerHTML = '<strong>Régimen General:</strong> Régimen completo con todos los beneficios laborales establecidos por ley.';
+            break;
+    }
+    
+    // Remover información anterior
+    const existingInfo = document.querySelector('.alert-info');
+    if (existingInfo) {
+        existingInfo.remove();
+    }
+    
+    // Agregar nueva información
+    if (regimen) {
+        e.target.parentNode.appendChild(infoDiv);
+    }
+});
+</script>
+{% endblock %}
+

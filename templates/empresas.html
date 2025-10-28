@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-building me-2"></i>Gestión de Empresas
+                </h4>
+                <a href="{{ url_for('nueva_empresa') }}" class="btn btn-light">
+                    <i class="fas fa-plus me-2"></i>Nueva Empresa
+                </a>
+            </div>
+            <div class="card-body">
+                {% if empresas %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Empresa</th>
+                                <th>RUC</th>
+                                <th>Régimen Laboral</th>
+                                <th>Empleados</th>
+                                <th>Locadores</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for empresa in empresas %}
+                            <tr>
+                                <td>
+                                    <strong>{{ empresa.nombre }}</strong>
+                                    {% if not empresa.activa %}
+                                        <span class="badge bg-secondary ms-2">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ empresa.ruc }}</td>
+                                <td>
+                                    {% if empresa.regimen_laboral == 'microempresa' %}
+                                        <span class="badge bg-warning">Microempresa (REMYPE)</span>
+                                    {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                        <span class="badge bg-info">Pequeña Empresa (REMYPE)</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Régimen General</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ empresa.empleados|length }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ empresa.locadores|length }}</span>
+                                </td>
+                                <td>{{ empresa.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" 
+                                           class="btn btn-outline-primary" title="Ver Personal">
+                                            <i class="fas fa-users"></i>
+                                        </a>
+                                        <a href="{{ url_for('planilla', empresa_id=empresa.id) }}" 
+                                           class="btn btn-outline-success" title="Calcular Planilla">
+                                            <i class="fas fa-calculator"></i>
+                                        </a>
+                                        <a href="{{ url_for('ausencias', empresa_id=empresa.id) }}" 
+                                           class="btn btn-outline-warning" title="Control de Ausencias">
+                                            <i class="fas fa-calendar-times"></i>
+                                        </a>
+                                        <a href="{{ url_for('deudas', empresa_id=empresa.id) }}" 
+                                           class="btn btn-outline-info" title="Deudas Internas">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay empresas registradas</h5>
+                    <p class="text-muted">Comience creando su primera empresa para gestionar el personal y las planillas.</p>
+                    <a href="{{ url_for('nueva_empresa') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Crear Primera Empresa
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if empresas %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Resumen por Régimen Laboral
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% set microempresas = empresas|selectattr('regimen_laboral', 'equalto', 'microempresa')|list %}
+                    {% set pequenas = empresas|selectattr('regimen_laboral', 'equalto', 'pequeña_empresa')|list %}
+                    {% set generales = empresas|selectattr('regimen_laboral', 'equalto', 'general')|list %}
+                    
+                    <div class="col-md-4">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <span class="badge bg-warning fa-2x mb-2">Microempresa</span>
+                                <h4>{{ microempresas|length }}</h4>
+                                <p class="text-muted">Empresas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <span class="badge bg-info fa-2x mb-2">Pequeña Empresa</span>
+                                <h4>{{ pequenas|length }}</h4>
+                                <p class="text-muted">Empresas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <span class="badge bg-success fa-2x mb-2">Régimen General</span>
+                                <h4>{{ generales|length }}</h4>
+                                <p class="text-muted">Empresas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

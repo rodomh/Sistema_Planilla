@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-home me-2"></i>Panel Principal - Sistema de Planillas Multirégimen
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h5>Bienvenido al Sistema de Planillas Multirégimen para Perú</h5>
+                        <p class="text-muted">
+                            Gestione hasta 5 empresas simultáneamente con diferentes regímenes laborales:
+                            Microempresa (REMYPE), Pequeña Empresa (REMYPE) y Régimen General.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{{ url_for('nueva_empresa') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Nueva Empresa
+                        </a>
+                    </div>
+                </div>
+
+                {% if empresas %}
+                <div class="row">
+                    <div class="col-12">
+                        <h5><i class="fas fa-building me-2"></i>Empresas Registradas</h5>
+                        <div class="row">
+                            {% for empresa in empresas %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0">{{ empresa.nombre }}</h6>
+                                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                                <span class="badge bg-warning regimen-badge">Microempresa</span>
+                                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                                <span class="badge bg-info regimen-badge">Pequeña Empresa</span>
+                                            {% else %}
+                                                <span class="badge bg-success regimen-badge">Régimen General</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="card-text text-muted small mb-3">
+                                            <i class="fas fa-id-card me-1"></i>RUC: {{ empresa.ruc }}<br>
+                                            <i class="fas fa-calendar me-1"></i>Creada: {{ empresa.fecha_creacion.strftime('%d/%m/%Y') }}
+                                        </p>
+                                        <div class="d-grid gap-2">
+                                            <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-users me-1"></i>Personal
+                                            </a>
+                                            <a href="{{ url_for('planilla', empresa_id=empresa.id) }}" class="btn btn-outline-success btn-sm">
+                                                <i class="fas fa-calculator me-1"></i>Planilla
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay empresas registradas</h5>
+                    <p class="text-muted">Comience creando su primera empresa para gestionar el personal y las planillas.</p>
+                    <a href="{{ url_for('nueva_empresa') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Crear Primera Empresa
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                <h5 class="card-title">{{ empresas|length }}</h5>
+                <p class="card-text text-muted">Empresas Registradas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x text-success mb-2"></i>
+                <h5 class="card-title">
+                    {% set total_empleados = 0 %}
+                    {% for empresa in empresas %}
+                        {% set total_empleados = total_empleados + empresa.empleados|length %}
+                    {% endfor %}
+                    {{ total_empleados }}
+                </h5>
+                <p class="card-text text-muted">Total Empleados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-file-invoice-dollar fa-2x text-warning mb-2"></i>
+                <h5 class="card-title">
+                    {% set total_locadores = 0 %}
+                    {% for empresa in empresas %}
+                        {% set total_locadores = total_locadores + empresa.locadores|length %}
+                    {% endfor %}
+                    {{ total_locadores }}
+                </h5>
+                <p class="card-text text-muted">Total Locadores</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Información del Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Regímenes Laborales Soportados:</h6>
+                        <ul class="list-unstyled">
+                            <li><span class="badge bg-warning me-2">Microempresa</span> Vacaciones: 15 días, Sin CTS, Sin Gratificaciones</li>
+                            <li><span class="badge bg-info me-2">Pequeña Empresa</span> Vacaciones: 15 días, CTS: 15 días/año, Gratificaciones: 1/2 sueldo</li>
+                            <li><span class="badge bg-success me-2">Régimen General</span> Vacaciones: 30 días, CTS: 1 sueldo/año, Gratificaciones: Sueldo + 9%</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Características del Sistema:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Gestión multirégimen automática</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Cálculo de beneficios sociales diferenciado</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Control de ausencias y permisos</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Gestión de préstamos y adelantos</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Pagos quincenales y mensuales</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

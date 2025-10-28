@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Personal - {{ empresa.nombre }}
+                    {% if empresa.regimen_laboral == 'microempresa' %}
+                        <span class="badge bg-warning ms-2">Microempresa</span>
+                    {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                        <span class="badge bg-info ms-2">Pequeña Empresa</span>
+                    {% else %}
+                        <span class="badge bg-success ms-2">Régimen General</span>
+                    {% endif %}
+                </h4>
+                <div class="btn-group">
+                    <a href="{{ url_for('nuevo_empleado', empresa_id=empresa.id) }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Nuevo Empleado
+                    </a>
+                    <a href="{{ url_for('nuevo_locador', empresa_id=empresa.id) }}" class="btn btn-info">
+                        <i class="fas fa-file-invoice me-2"></i>Nuevo Locador
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Pestañas -->
+                <ul class="nav nav-tabs" id="personalTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="empleados-tab" data-bs-toggle="tab" data-bs-target="#empleados" type="button" role="tab">
+                            <i class="fas fa-users me-1"></i>Empleados ({{ empleados|length }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="locadores-tab" data-bs-toggle="tab" data-bs-target="#locadores" type="button" role="tab">
+                            <i class="fas fa-file-invoice me-1"></i>Locadores ({{ locadores|length }})
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3" id="personalTabsContent">
+                    <!-- Tab Empleados -->
+                    <div class="tab-pane fade show active" id="empleados" role="tabpanel">
+                        {% if empleados %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>DNI</th>
+                                        <th>Sueldo Base</th>
+                                        <th>Fecha Ingreso</th>
+                                        <th>Pensión</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for empleado in empleados %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ empleado.nombres }} {{ empleado.apellidos }}</strong>
+                                        </td>
+                                        <td>{{ empleado.dni }}</td>
+                                        <td>S/. {{ "%.2f"|format(empleado.sueldo_base) }}</td>
+                                        <td>{{ empleado.fecha_ingreso.strftime('%d/%m/%Y') }}</td>
+                                        <td>
+                                            {% if empleado.tipo_pension == 'ONP' %}
+                                                <span class="badge bg-primary">ONP</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ empleado.afp_codigo }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if empleado.activo %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactivo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('ausencias', empresa_id=empresa.id) }}" 
+                                                   class="btn btn-outline-warning" title="Ausencias">
+                                                    <i class="fas fa-calendar-times"></i>
+                                                </a>
+                                                <a href="{{ url_for('deudas', empresa_id=empresa.id) }}" 
+                                                   class="btn btn-outline-info" title="Deudas">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay empleados registrados</h5>
+                            <p class="text-muted">Comience agregando empleados a esta empresa.</p>
+                            <a href="{{ url_for('nuevo_empleado', empresa_id=empresa.id) }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Agregar Primer Empleado
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Tab Locadores -->
+                    <div class="tab-pane fade" id="locadores" role="tabpanel">
+                        {% if locadores %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Locador</th>
+                                        <th>DNI</th>
+                                        <th>Monto Mensual</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for locador in locadores %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ locador.nombres }} {{ locador.apellidos }}</strong>
+                                        </td>
+                                        <td>{{ locador.dni }}</td>
+                                        <td>S/. {{ "%.2f"|format(locador.monto_mensual) }}</td>
+                                        <td>{{ locador.fecha_inicio.strftime('%d/%m/%Y') }}</td>
+                                        <td>
+                                            {% if locador.suspendido %}
+                                                <span class="badge bg-warning">Suspendido</span>
+                                            {% elif locador.activo %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactivo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-info" 
+                                                        onclick="toggleSuspension({{ locador.id }}, {{ locador.suspendido|lower }})"
+                                                        title="Cambiar Estado">
+                                                    <i class="fas fa-toggle-{{ 'on' if locador.suspendido else 'off' }}"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-invoice fa-2x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay locadores registrados</h5>
+                            <p class="text-muted">Agregue locadores de servicios para esta empresa.</p>
+                            <a href="{{ url_for('nuevo_locador', empresa_id=empresa.id) }}" class="btn btn-info">
+                                <i class="fas fa-file-invoice me-2"></i>Agregar Primer Locador
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Resumen de Personal
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ empleados|length }}</h4>
+                        <p class="text-muted">Empleados</p>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-info">{{ locadores|length }}</h4>
+                        <p class="text-muted">Locadores</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calculator me-2"></i>Acciones Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('planilla', empresa_id=empresa.id) }}" class="btn btn-success">
+                        <i class="fas fa-calculator me-2"></i>Calcular Planilla
+                    </a>
+                    <a href="{{ url_for('ausencias', empresa_id=empresa.id) }}" class="btn btn-warning">
+                        <i class="fas fa-calendar-times me-2"></i>Control de Ausencias
+                    </a>
+                    <a href="{{ url_for('deudas', empresa_id=empresa.id) }}" class="btn btn-info">
+                        <i class="fas fa-money-bill-wave me-2"></i>Deudas Internas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleSuspension(locadorId, isSuspended) {
+    const action = isSuspended ? 'activar' : 'suspender';
+    if (confirm(`¿Está seguro de que desea ${action} este locador?`)) {
+        // Aquí se implementaría la lógica para cambiar el estado
+        alert('Función en desarrollo');
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>Nuevo Locador de Servicios - {{ empresa.nombre }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombres" class="form-label">Nombres *</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellidos" class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dni" class="form-label">DNI *</label>
+                                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="monto_mensual" class="form-label">Monto Mensual (S/.) *</label>
+                                <input type="number" class="form-control" id="monto_mensual" name="monto_mensual" 
+                                       step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+                                <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_fin" class="form-label">Fecha de Fin</label>
+                                <input type="date" class="form-control" id="fecha_fin" name="fecha_fin">
+                                <div class="form-text">Dejar vacío si es indefinido</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <textarea class="form-control" id="direccion" name="direccion" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="suspendido" name="suspendido">
+                            <label class="form-check-label" for="suspendido">
+                                Suspendido (No aplica retención 4ta categoría)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Crear Locador
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Información sobre Locadores de Servicios
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Retención 4ta Categoría</h6>
+                    <p class="mb-2">Se aplica automáticamente cuando:</p>
+                    <ul class="mb-0">
+                        <li>El locador NO está suspendido</li>
+                        <li>El monto mensual supera S/. 1,500.00</li>
+                        <li>La retención es del 8% sobre el monto pagado</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>Diferencias con Empleados</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Empleados:</h6>
+                            <ul>
+                                <li>Sueldo fijo mensual</li>
+                                <li>Beneficios sociales según régimen</li>
+                                <li>Descuentos por pensión e impuesto a la renta</li>
+                                <li>Control de ausencias</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Locadores:</h6>
+                            <ul>
+                                <li>Monto fijo por servicios</li>
+                                <li>Sin beneficios sociales</li>
+                                <li>Solo retención 4ta categoría</li>
+                                <li>Sin control de ausencias</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Establecer fecha actual como fecha de inicio
+document.getElementById('fecha_inicio').value = new Date().toISOString().split('T')[0];
+
+// Solo permitir números en DNI
+document.getElementById('dni').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+});
+
+// Validar DNI
+document.getElementById('dni').addEventListener('blur', function(e) {
+    const dni = e.target.value;
+    if (dni.length !== 8) {
+        e.target.setCustomValidity('El DNI debe tener 8 dígitos');
+    } else {
+        e.target.setCustomValidity('');
+    }
+});
+
+// Validar monto mensual
+document.getElementById('monto_mensual').addEventListener('input', function(e) {
+    const monto = parseFloat(e.target.value);
+    if (monto < 0) {
+        e.target.setCustomValidity('El monto no puede ser negativo');
+    } else {
+        e.target.setCustomValidity('');
+        
+        // Mostrar información sobre retención
+        const infoDiv = document.getElementById('retencion-info');
+        if (infoDiv) {
+            infoDiv.remove();
+        }
+        
+        if (monto > 1500) {
+            const retencion = monto * 0.08;
+            const neto = monto - retencion;
+            
+            const newInfoDiv = document.createElement('div');
+            newInfoDiv.id = 'retencion-info';
+            newInfoDiv.className = 'alert alert-info mt-2';
+            newInfoDiv.innerHTML = `
+                <strong>Retención 4ta Categoría:</strong><br>
+                Monto bruto: S/. ${monto.toFixed(2)}<br>
+                Retención (8%): S/. ${retencion.toFixed(2)}<br>
+                Neto a pagar: S/. ${neto.toFixed(2)}
+            `;
+            
+            e.target.parentNode.appendChild(newInfoDiv);
+        }
+    }
+});
+
+// Validar fechas
+document.getElementById('fecha_fin').addEventListener('change', function(e) {
+    const fechaInicio = new Date(document.getElementById('fecha_inicio').value);
+    const fechaFin = new Date(e.target.value);
+    
+    if (fechaFin < fechaInicio) {
+        e.target.setCustomValidity('La fecha de fin no puede ser anterior a la fecha de inicio');
+    } else {
+        e.target.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}
+

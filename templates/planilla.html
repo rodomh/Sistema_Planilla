@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-calculator me-2"></i>Calculadora de Planilla - {{ empresa.nombre }}
+                    {% if empresa.regimen_laboral == 'microempresa' %}
+                        <span class="badge bg-warning ms-2">Microempresa</span>
+                    {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                        <span class="badge bg-info ms-2">Pequeña Empresa</span>
+                    {% else %}
+                        <span class="badge bg-success ms-2">Régimen General</span>
+                    {% endif %}
+                </h4>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" onclick="calcularPlanilla()">
+                        <i class="fas fa-calculator me-2"></i>Calcular Planilla
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="exportarPlanilla()">
+                        <i class="fas fa-download me-2"></i>Exportar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Selector de período -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label for="mes" class="form-label">Mes</label>
+                        <select class="form-select" id="mes">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="año" class="form-label">Año</label>
+                        <select class="form-select" id="año">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" id="quincenal">
+                            <label class="form-check-label" for="quincenal">
+                                Pago Quincenal
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="mensual" checked>
+                            <label class="form-check-label" for="mensual">
+                                Pago Mensual
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de beneficios según régimen -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>Beneficios Aplicables según Régimen:</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Vacaciones:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                15 días anuales
+                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                15 días anuales
+                            {% else %}
+                                30 días anuales
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>CTS:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                NO corresponde
+                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                15 días por año
+                            {% else %}
+                                Un sueldo anual
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Gratificaciones:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                NO corresponde
+                            {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                                Medio sueldo (Jul/Dic)
+                            {% else %}
+                                Sueldo + 9% (Jul/Dic)
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Asignación Familiar:</strong>
+                            {% if empresa.regimen_laboral == 'microempresa' %}
+                                NO corresponde
+                            {% else %}
+                                S/. 102.50
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de empleados -->
+                {% if empleados %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tablaEmpleados">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Sueldo Base</th>
+                                <th>Días Trabajados</th>
+                                <th>Vacaciones</th>
+                                <th>CTS</th>
+                                <th>Gratificación</th>
+                                <th>Asignación Familiar</th>
+                                <th>Pensión</th>
+                                <th>Impuesto Renta</th>
+                                <th>Neto a Pagar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for empleado in empleados %}
+                            <tr data-empleado-id="{{ empleado.id }}">
+                                <td>
+                                    <strong>{{ empleado.nombres }} {{ empleado.apellidos }}</strong><br>
+                                    <small class="text-muted">{{ empleado.dni }}</small>
+                                </td>
+                                <td>S/. {{ "%.2f"|format(empleado.sueldo_base) }}</td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm dias-trabajados" 
+                                           value="30" min="0" max="30" style="width: 80px;">
+                                </td>
+                                <td class="vacaciones">S/. 0.00</td>
+                                <td class="cts">S/. 0.00</td>
+                                <td class="gratificacion">S/. 0.00</td>
+                                <td class="asignacion-familiar">S/. 0.00</td>
+                                <td class="pension">S/. 0.00</td>
+                                <td class="impuesto-renta">S/. 0.00</td>
+                                <td class="neto-pagar"><strong>S/. 0.00</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay empleados registrados</h5>
+                    <p class="text-muted">Agregue empleados para calcular la planilla.</p>
+                    <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Gestionar Personal
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Tabla de locadores -->
+                {% if locadores %}
+                <div class="mt-4">
+                    <h5><i class="fas fa-file-invoice me-2"></i>Locadores de Servicios</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tablaLocadores">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Locador</th>
+                                    <th>Monto Mensual</th>
+                                    <th>Estado</th>
+                                    <th>Retención 4ta Cat.</th>
+                                    <th>Neto a Pagar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for locador in locadores %}
+                                <tr data-locador-id="{{ locador.id }}">
+                                    <td>
+                                        <strong>{{ locador.nombres }} {{ locador.apellidos }}</strong><br>
+                                        <small class="text-muted">{{ locador.dni }}</small>
+                                    </td>
+                                    <td>S/. {{ "%.2f"|format(locador.monto_mensual) }}</td>
+                                    <td>
+                                        {% if locador.suspendido %}
+                                            <span class="badge bg-warning">Suspendido</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="retencion-4ta">S/. 0.00</td>
+                                    <td class="neto-locador"><strong>S/. 0.00</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Totales -->
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Resumen de Cálculos</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Total Empleados:</strong> <span id="totalEmpleados">{{ empleados|length }}</span></p>
+                                        <p><strong>Total Locadores:</strong> <span id="totalLocadores">{{ locadores|length }}</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Total Ingresos:</strong> S/. <span id="totalIngresos">0.00</span></p>
+                                        <p><strong>Total Descuentos:</strong> S/. <span id="totalDescuentos">0.00</span></p>
+                                        <p><strong>Total Neto:</strong> S/. <span id="totalNeto">0.00</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Acciones</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-success" onclick="calcularPlanilla()">
+                                        <i class="fas fa-calculator me-2"></i>Calcular Planilla
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="exportarPlanilla()">
+                                        <i class="fas fa-download me-2"></i>Exportar Excel
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="imprimirPlanilla()">
+                                        <i class="fas fa-print me-2"></i>Imprimir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de resultados -->
+<div class="modal fade" id="resultadoModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resultado del Cálculo de Planilla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resultadoContenido">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="exportarPlanilla()">Exportar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Establecer mes actual
+document.getElementById('mes').value = {{ mes }};
+document.getElementById('año').value = {{ año }};
+
+function calcularPlanilla() {
+    const mes = document.getElementById('mes').value;
+    const año = document.getElementById('año').value;
+    const empresaId = {{ empresa.id }};
+    
+    // Mostrar loading
+    const btnCalcular = document.querySelector('button[onclick="calcularPlanilla()"]');
+    const originalText = btnCalcular.innerHTML;
+    btnCalcular.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Calculando...';
+    btnCalcular.disabled = true;
+    
+    // Enviar solicitud
+    fetch('{{ url_for("calcular_planilla", empresa_id=empresa.id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `mes=${mes}&año=${año}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarResultados(data.resultado);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al calcular la planilla');
+    })
+    .finally(() => {
+        btnCalcular.innerHTML = originalText;
+        btnCalcular.disabled = false;
+    });
+}
+
+function mostrarResultados(resultado) {
+    // Actualizar tabla de empleados
+    resultado.empleados.forEach(empleado => {
+        const row = document.querySelector(`tr[data-empleado-id="${empleado.id}"]`);
+        if (row) {
+            row.querySelector('.vacaciones').textContent = `S/. ${empleado.beneficios.vacaciones.toFixed(2)}`;
+            row.querySelector('.cts').textContent = `S/. ${empleado.beneficios.cts.toFixed(2)}`;
+            row.querySelector('.gratificacion').textContent = `S/. ${empleado.beneficios.gratificacion.toFixed(2)}`;
+            row.querySelector('.asignacion-familiar').textContent = `S/. ${empleado.beneficios.asignacion_familiar.toFixed(2)}`;
+            row.querySelector('.pension').textContent = `S/. ${empleado.descuentos.pension.toFixed(2)}`;
+            row.querySelector('.impuesto-renta').textContent = `S/. ${empleado.descuentos.impuesto_renta.toFixed(2)}`;
+            row.querySelector('.neto-pagar').innerHTML = `<strong>S/. ${empleado.neto_pagar.toFixed(2)}</strong>`;
+        }
+    });
+    
+    // Actualizar tabla de locadores
+    resultado.locadores.forEach(locador => {
+        const row = document.querySelector(`tr[data-locador-id="${locador.id}"]`);
+        if (row) {
+            row.querySelector('.retencion-4ta').textContent = `S/. ${locador.retencion_4ta_cat.toFixed(2)}`;
+            row.querySelector('.neto-locador').innerHTML = `<strong>S/. ${locador.neto_pagar.toFixed(2)}</strong>`;
+        }
+    });
+    
+    // Actualizar totales
+    document.getElementById('totalIngresos').textContent = resultado.totales.total_ingresos.toFixed(2);
+    document.getElementById('totalDescuentos').textContent = resultado.totales.total_descuentos.toFixed(2);
+    document.getElementById('totalNeto').textContent = resultado.totales.total_neto.toFixed(2);
+    
+    // Mostrar modal con detalles
+    mostrarModalResultados(resultado);
+}
+
+function mostrarModalResultados(resultado) {
+    const contenido = `
+        <div class="row">
+            <div class="col-12">
+                <h6>Empresa: ${resultado.empresa}</h6>
+                <p>Régimen: ${resultado.regimen_laboral} | Período: ${resultado.mes}/${resultado.año}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="text-primary">${resultado.totales.total_empleados}</h5>
+                        <p class="text-muted">Empleados</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="text-info">${resultado.totales.total_locadores}</h5>
+                        <p class="text-muted">Locadores</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="text-success">S/. ${resultado.totales.total_neto.toFixed(2)}</h5>
+                        <p class="text-muted">Total Neto</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('resultadoContenido').innerHTML = contenido;
+    new bootstrap.Modal(document.getElementById('resultadoModal')).show();
+}
+
+function exportarPlanilla() {
+    alert('Función de exportación en desarrollo');
+}
+
+function imprimirPlanilla() {
+    window.print();
+}
+
+// Manejar cambios en días trabajados
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('dias-trabajados')) {
+        // Recalcular automáticamente si es necesario
+        console.log('Días trabajados cambiados:', e.target.value);
+    }
+});
+</script>
+{% endblock %}
+
