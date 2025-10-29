@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>Deudas Internas - {{ empresa.nombre }}
+                </h4>
+                <div>
+                    <a href="{{ url_for('nuevo_prestamo', empresa_id=empresa.id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nuevo Préstamo
+                    </a>
+                    <a href="{{ url_for('nuevo_adelanto', empresa_id=empresa.id) }}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Nuevo Adelanto
+                    </a>
+                    <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Préstamos Activos -->
+                <div class="mb-4">
+                    <h5 class="text-primary">
+                        <i class="fas fa-hand-holding-usd me-2"></i>Préstamos Activos
+                        <span class="badge bg-primary ms-2">{{ prestamos|length }}</span>
+                    </h5>
+                    
+                    {% if prestamos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Monto Total</th>
+                                    <th>Monto Pendiente</th>
+                                    <th>Cuota Mensual</th>
+                                    <th>Fecha Préstamo</th>
+                                    <th>Motivo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prestamo in prestamos %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ prestamo.empleado.nombres }} {{ prestamo.empleado.apellidos }}</strong>
+                                        <br><small class="text-muted">{{ prestamo.empleado.dni }}</small>
+                                    </td>
+                                    <td>S/. {{ "%.2f"|format(prestamo.monto_total) }}</td>
+                                    <td>
+                                        <span class="badge bg-warning">S/. {{ "%.2f"|format(prestamo.monto_pendiente) }}</span>
+                                    </td>
+                                    <td>S/. {{ "%.2f"|format(prestamo.cuota_mensual) }}</td>
+                                    <td>{{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if prestamo.motivo %}
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ prestamo.motivo }}">
+                                                {{ prestamo.motivo }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">Sin motivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                onclick="cancelarPrestamo({{ prestamo.id }})"
+                                                title="Cancelar Préstamo">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-hand-holding-usd fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No hay préstamos activos</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Adelantos Pendientes -->
+                <div class="mb-4">
+                    <h5 class="text-success">
+                        <i class="fas fa-forward me-2"></i>Adelantos Pendientes
+                        <span class="badge bg-success ms-2">{{ adelantos|length }}</span>
+                    </h5>
+                    
+                    {% if adelantos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Monto</th>
+                                    <th>Fecha Adelanto</th>
+                                    <th>Mes a Aplicar</th>
+                                    <th>Año a Aplicar</th>
+                                    <th>Motivo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for adelanto in adelantos %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ adelanto.empleado.nombres }} {{ adelanto.empleado.apellidos }}</strong>
+                                        <br><small class="text-muted">{{ adelanto.empleado.dni }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">S/. {{ "%.2f"|format(adelanto.monto) }}</span>
+                                    </td>
+                                    <td>{{ adelanto.fecha_adelanto.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ adelanto.mes_aplicar }}</td>
+                                    <td>{{ adelanto.año_aplicar }}</td>
+                                    <td>
+                                        {% if adelanto.motivo %}
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ adelanto.motivo }}">
+                                                {{ adelanto.motivo }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">Sin motivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                onclick="cancelarAdelanto({{ adelanto.id }})"
+                                                title="Cancelar Adelanto">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-forward fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No hay adelantos pendientes</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelarPrestamo(prestamoId) {
+    if (confirm('¿Está seguro de que desea cancelar este préstamo?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/prestamo/cancelar/' + prestamoId;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function cancelarAdelanto(adelantoId) {
+    if (confirm('¿Está seguro de que desea cancelar este adelanto?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/adelanto/cancelar/' + adelantoId;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

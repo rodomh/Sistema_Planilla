@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 import os
+import io
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sispla_peru_2024'
@@ -38,9 +41,6 @@ class Empleado(db.Model):
     email = db.Column(db.String(100))
     tipo_pension = db.Column(db.String(20), default='ONP')
     afp_codigo = db.Column(db.String(10))
-    cuenta_bancaria = db.Column(db.String(20))
-    banco = db.Column(db.String(50))
-    tipo_pago = db.Column(db.String(20), default='mensual')
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -57,8 +57,6 @@ class Locador(db.Model):
     direccion = db.Column(db.String(500))
     telefono = db.Column(db.String(20))
     email = db.Column(db.String(100))
-    cuenta_bancaria = db.Column(db.String(20))
-    banco = db.Column(db.String(50))
     suspendido = db.Column(db.Boolean, default=False)
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
@@ -131,10 +129,7 @@ def nuevo_empleado(empresa_id):
             sueldo_base=float(request.form['sueldo_base']),
             fecha_ingreso=datetime.strptime(request.form['fecha_ingreso'], '%Y-%m-%d').date(),
             tipo_pension=request.form['tipo_pension'],
-            afp_codigo=request.form.get('afp_codigo', ''),
-            cuenta_bancaria=request.form.get('cuenta_bancaria', ''),
-            banco=request.form.get('banco', ''),
-            tipo_pago=request.form.get('tipo_pago', 'mensual')
+            afp_codigo=request.form.get('afp_codigo', '')
         )
         db.session.add(empleado)
         db.session.commit()
@@ -156,9 +151,7 @@ def nuevo_locador(empresa_id):
             dni=request.form['dni'],
             monto_mensual=float(request.form['monto_mensual']),
             fecha_inicio=datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date(),
-            suspendido=request.form.get('suspendido') == 'on',
-            cuenta_bancaria=request.form.get('cuenta_bancaria', ''),
-            banco=request.form.get('banco', '')
+            suspendido=request.form.get('suspendido') == 'on'
         )
         db.session.add(locador)
         db.session.commit()
@@ -213,10 +206,6 @@ def calcular_planilla_simple(empresa_id, mes, año):
         sueldo_base = float(empleado.sueldo_base)
         sueldo_ajustado = sueldo_base
         
-        # Aplicar tipo de pago (quincenal = 50% del sueldo ajustado)
-        if empleado.tipo_pago == 'quincenal':
-            sueldo_ajustado = sueldo_ajustado * 0.5
-        
         # Beneficios según régimen
         if empresa.regimen_laboral in ['microempresa', 'pequeña_empresa']:
             vacaciones = sueldo_ajustado * 15 / 360
@@ -267,9 +256,6 @@ def calcular_planilla_simple(empresa_id, mes, año):
             'dni': empleado.dni,
             'sueldo_base': sueldo_base,
             'sueldo_ajustado': round(sueldo_ajustado, 2),
-            'tipo_pago': empleado.tipo_pago,
-            'cuenta_bancaria': empleado.cuenta_bancaria or '',
-            'banco': empleado.banco or '',
             'dias_trabajados': 30,
             'dias_faltados': 0,
             'horas_perdidas': 0,
@@ -310,8 +296,6 @@ def calcular_planilla_simple(empresa_id, mes, año):
             'dni': locador.dni,
             'monto_mensual': monto_bruto,
             'suspendido': locador.suspendido,
-            'cuenta_bancaria': locador.cuenta_bancaria or '',
-            'banco': locador.banco or '',
             'monto_bruto': monto_bruto,
             'retencion_4ta_cat': round(retencion_4ta_cat, 2),
             'neto_pagar': round(neto_pagar, 2)
@@ -349,6 +333,165 @@ def calcular_planilla(empresa_id):
             'success': False,
             'error': str(e)
         })
+
+@app.route('/exportar_excel/<int:empresa_id>', methods=['POST'])
+def exportar_excel(empresa_id):
+    """Exportar planilla a Excel"""
+    empresa = Empresa.query.get_or_404(empresa_id)
+    mes = int(request.form['mes'])
+    año = int(request.form['año'])
+    
+    try:
+        resultado = calcular_planilla_simple(empresa_id, mes, año)
+        
+        # Crear libro de trabajo
+        wb = Workbook()
+        
+        # Hoja de empleados
+        ws_empleados = wb.active
+        ws_empleados.title = "Empleados"
+        
+        # Encabezados para empleados
+        headers_empleados = [
+            'Nombres', 'Apellidos', 'DNI', 'Sueldo Base', 'Sueldo Ajustado',
+            'Días Trabajados', 'Días Faltados', 'Horas Perdidas',
+            'Vacaciones', 'CTS', 'Gratificación', 'Asignación Familiar',
+            'Pensión', 'Impuesto Renta', 'Préstamos', 'Adelantos', 'Faltas',
+            'Total Ingresos', 'Total Descuentos', 'Neto a Pagar'
+        ]
+        
+        # Escribir encabezados
+        for col, header in enumerate(headers_empleados, 1):
+            cell = ws_empleados.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center")
+        
+        # Escribir datos de empleados
+        for row, emp in enumerate(resultado['empleados'], 2):
+            ws_empleados.cell(row=row, column=1, value=emp['nombres'])
+            ws_empleados.cell(row=row, column=2, value=emp['apellidos'])
+            ws_empleados.cell(row=row, column=3, value=emp['dni'])
+            ws_empleados.cell(row=row, column=4, value=emp['sueldo_base'])
+            ws_empleados.cell(row=row, column=5, value=emp['sueldo_ajustado'])
+            ws_empleados.cell(row=row, column=6, value=emp['dias_trabajados'])
+            ws_empleados.cell(row=row, column=7, value=emp['dias_faltados'])
+            ws_empleados.cell(row=row, column=8, value=emp['horas_perdidas'])
+            ws_empleados.cell(row=row, column=9, value=emp['beneficios']['vacaciones'])
+            ws_empleados.cell(row=row, column=10, value=emp['beneficios']['cts'])
+            ws_empleados.cell(row=row, column=11, value=emp['beneficios']['gratificacion'])
+            ws_empleados.cell(row=row, column=12, value=emp['beneficios']['asignacion_familiar'])
+            ws_empleados.cell(row=row, column=13, value=emp['descuentos']['pension'])
+            ws_empleados.cell(row=row, column=14, value=emp['descuentos']['impuesto_renta'])
+            ws_empleados.cell(row=row, column=15, value=emp['descuentos']['prestamos'])
+            ws_empleados.cell(row=row, column=16, value=emp['descuentos']['adelantos'])
+            ws_empleados.cell(row=row, column=17, value=emp.get('faltas', 0))
+            ws_empleados.cell(row=row, column=18, value=emp['total_ingresos'])
+            ws_empleados.cell(row=row, column=19, value=emp['total_descuentos'])
+            ws_empleados.cell(row=row, column=20, value=emp['neto_pagar'])
+        
+        # Ajustar ancho de columnas
+        for column in ws_empleados.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 20)
+            ws_empleados.column_dimensions[column_letter].width = adjusted_width
+        
+        # Hoja de locadores
+        ws_locadores = wb.create_sheet("Locadores")
+        
+        # Encabezados para locadores
+        headers_locadores = [
+            'Nombres', 'Apellidos', 'DNI', 'Monto Mensual', 'Suspendido',
+            'Retención 4ta Cat', 'Neto a Pagar'
+        ]
+        
+        # Escribir encabezados
+        for col, header in enumerate(headers_locadores, 1):
+            cell = ws_locadores.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center")
+        
+        # Escribir datos de locadores
+        for row, loc in enumerate(resultado['locadores'], 2):
+            ws_locadores.cell(row=row, column=1, value=loc['nombres'])
+            ws_locadores.cell(row=row, column=2, value=loc['apellidos'])
+            ws_locadores.cell(row=row, column=3, value=loc['dni'])
+            ws_locadores.cell(row=row, column=4, value=loc['monto_mensual'])
+            ws_locadores.cell(row=row, column=5, value='Sí' if loc['suspendido'] else 'No')
+            ws_locadores.cell(row=row, column=6, value=loc['retencion_4ta_cat'])
+            ws_locadores.cell(row=row, column=7, value=loc['neto_pagar'])
+        
+        # Ajustar ancho de columnas
+        for column in ws_locadores.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 20)
+            ws_locadores.column_dimensions[column_letter].width = adjusted_width
+        
+        # Hoja de resumen
+        ws_resumen = wb.create_sheet("Resumen")
+        
+        # Escribir resumen
+        ws_resumen.cell(row=1, column=1, value="Concepto").font = Font(bold=True)
+        ws_resumen.cell(row=1, column=2, value="Valor").font = Font(bold=True)
+        
+        resumen_data = [
+            ("Empresa", resultado['empresa']),
+            ("Régimen Laboral", resultado['regimen_laboral']),
+            ("Período", f"{mes:02d}/{año}"),
+            ("Total Empleados", resultado['totales']['total_empleados']),
+            ("Total Locadores", resultado['totales']['total_locadores']),
+            ("Total Ingresos", resultado['totales']['total_ingresos']),
+            ("Total Descuentos", resultado['totales']['total_descuentos']),
+            ("Total Neto", resultado['totales']['total_neto'])
+        ]
+        
+        for row, (concepto, valor) in enumerate(resumen_data, 2):
+            ws_resumen.cell(row=row, column=1, value=concepto)
+            ws_resumen.cell(row=row, column=2, value=valor)
+        
+        # Ajustar ancho de columnas
+        for column in ws_resumen.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 20)
+            ws_resumen.column_dimensions[column_letter].width = adjusted_width
+        
+        # Guardar en memoria
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Crear respuesta
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename=planilla_{empresa.nombre}_{mes:02d}_{año}.xlsx'
+        
+        return response
+        
+    except Exception as e:
+        flash(f'Error al exportar: {str(e)}', 'error')
+        return redirect(url_for('planilla', empresa_id=empresa_id))
 
 if __name__ == '__main__':
     # No crear tablas, usar las existentes

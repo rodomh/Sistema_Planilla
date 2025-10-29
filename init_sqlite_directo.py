@@ -81,6 +81,57 @@ def crear_base_datos_directa():
         ''')
         print("✓ Tabla locadores creada")
         
+        # Crear tabla ausencias
+        cursor.execute('''
+            CREATE TABLE ausencias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                empleado_id INTEGER NOT NULL,
+                fecha DATE NOT NULL,
+                tipo VARCHAR(20) NOT NULL,
+                justificada BOOLEAN DEFAULT 0,
+                motivo VARCHAR(500),
+                horas_perdidas REAL DEFAULT 8.0,
+                fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (empleado_id) REFERENCES empleados (id)
+            )
+        ''')
+        print("✓ Tabla ausencias creada")
+        
+        # Crear tabla prestamos
+        cursor.execute('''
+            CREATE TABLE prestamos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                empleado_id INTEGER NOT NULL,
+                monto_total REAL NOT NULL,
+                monto_pendiente REAL NOT NULL,
+                cuota_mensual REAL NOT NULL,
+                fecha_prestamo DATE NOT NULL,
+                fecha_finalizacion DATE,
+                motivo VARCHAR(500),
+                activo BOOLEAN DEFAULT 1,
+                fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (empleado_id) REFERENCES empleados (id)
+            )
+        ''')
+        print("✓ Tabla prestamos creada")
+        
+        # Crear tabla adelantos
+        cursor.execute('''
+            CREATE TABLE adelantos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                empleado_id INTEGER NOT NULL,
+                monto REAL NOT NULL,
+                fecha_adelanto DATE NOT NULL,
+                mes_aplicar INTEGER NOT NULL,
+                año_aplicar INTEGER NOT NULL,
+                motivo VARCHAR(500),
+                aplicado BOOLEAN DEFAULT 0,
+                fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (empleado_id) REFERENCES empleados (id)
+            )
+        ''')
+        print("✓ Tabla adelantos creada")
+        
         # Insertar datos de ejemplo
         cursor.execute('''
             INSERT INTO empresas (nombre, ruc, regimen_laboral, direccion, telefono, email)

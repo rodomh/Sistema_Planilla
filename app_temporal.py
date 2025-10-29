@@ -10,9 +10,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Modelos que coinciden exactamente con la base de datos existente
+# Modelos simplificados sin campos bancarios por ahora
 class Empresa(db.Model):
-    __tablename__ = 'empresas'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(200), nullable=False)
     ruc = db.Column(db.String(11), unique=True, nullable=False)
@@ -351,5 +350,6 @@ def calcular_planilla(empresa_id):
         })
 
 if __name__ == '__main__':
-    # No crear tablas, usar las existentes
+    with app.app_context():
+        db.create_all()
     app.run(debug=True, host='0.0.0.0', port=5000)

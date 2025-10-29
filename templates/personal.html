@@ -81,14 +81,12 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                <a href="{{ url_for('ausencias', empresa_id=empresa.id) }}" 
-                                                   class="btn btn-outline-warning" title="Ausencias">
+                                                <button class="btn btn-outline-warning" title="Ausencias (Próximamente)" disabled>
                                                     <i class="fas fa-calendar-times"></i>
-                                                </a>
-                                                <a href="{{ url_for('deudas', empresa_id=empresa.id) }}" 
-                                                   class="btn btn-outline-info" title="Deudas">
+                                                </button>
+                                                <button class="btn btn-outline-info" title="Deudas (Próximamente)" disabled>
                                                     <i class="fas fa-money-bill-wave"></i>
-                                                </a>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -206,12 +204,12 @@
                     <a href="{{ url_for('planilla', empresa_id=empresa.id) }}" class="btn btn-success">
                         <i class="fas fa-calculator me-2"></i>Calcular Planilla
                     </a>
-                    <a href="{{ url_for('ausencias', empresa_id=empresa.id) }}" class="btn btn-warning">
+                    <button class="btn btn-warning" disabled title="Control de Ausencias (Próximamente)">
                         <i class="fas fa-calendar-times me-2"></i>Control de Ausencias
-                    </a>
-                    <a href="{{ url_for('deudas', empresa_id=empresa.id) }}" class="btn btn-info">
+                    </button>
+                    <button class="btn btn-info" disabled title="Deudas Internas (Próximamente)">
                         <i class="fas fa-money-bill-wave me-2"></i>Deudas Internas
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>

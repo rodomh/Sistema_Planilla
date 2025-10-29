@@ -127,6 +127,9 @@
                                 <th>Asignación Familiar</th>
                                 <th>Pensión</th>
                                 <th>Impuesto Renta</th>
+                                <th>Préstamos</th>
+                                <th>Adelantos</th>
+                                <th>Faltas</th>
                                 <th>Neto a Pagar</th>
                             </tr>
                         </thead>
@@ -135,7 +138,15 @@
                             <tr data-empleado-id="{{ empleado.id }}">
                                 <td>
                                     <strong>{{ empleado.nombres }} {{ empleado.apellidos }}</strong><br>
-                                    <small class="text-muted">{{ empleado.dni }}</small>
+                                    <small class="text-muted">{{ empleado.dni }}</small><br>
+                                    {% if empleado.tipo_pago == 'quincenal' %}
+                                        <span class="badge bg-warning">Quincenal</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Mensual</span>
+                                    {% endif %}
+                                    {% if empleado.cuenta_bancaria %}
+                                        <br><small class="text-info">{{ empleado.banco or 'Banco' }}: {{ empleado.cuenta_bancaria }}</small>
+                                    {% endif %}
                                 </td>
                                 <td>S/. {{ "%.2f"|format(empleado.sueldo_base) }}</td>
                                 <td>
@@ -148,6 +159,9 @@
                                 <td class="asignacion-familiar">S/. 0.00</td>
                                 <td class="pension">S/. 0.00</td>
                                 <td class="impuesto-renta">S/. 0.00</td>
+                                <td class="prestamos">S/. 0.00</td>
+                                <td class="adelantos">S/. 0.00</td>
+                                <td class="faltas">S/. 0.00</td>
                                 <td class="neto-pagar"><strong>S/. 0.00</strong></td>
                             </tr>
                             {% endfor %}
@@ -327,6 +341,9 @@ function mostrarResultados(resultado) {
             row.querySelector('.asignacion-familiar').textContent = `S/. ${empleado.beneficios.asignacion_familiar.toFixed(2)}`;
             row.querySelector('.pension').textContent = `S/. ${empleado.descuentos.pension.toFixed(2)}`;
             row.querySelector('.impuesto-renta').textContent = `S/. ${empleado.descuentos.impuesto_renta.toFixed(2)}`;
+            row.querySelector('.prestamos').textContent = `S/. ${empleado.descuentos.prestamos.toFixed(2)}`;
+            row.querySelector('.adelantos').textContent = `S/. ${empleado.descuentos.adelantos.toFixed(2)}`;
+            row.querySelector('.faltas').textContent = `S/. ${empleado.faltas || 0}`;
             row.querySelector('.neto-pagar').innerHTML = `<strong>S/. ${empleado.neto_pagar.toFixed(2)}</strong>`;
         }
     });
@@ -390,7 +407,31 @@ function mostrarModalResultados(resultado) {
 }
 
 function exportarPlanilla() {
-    alert('Función de exportación en desarrollo');
+    const mes = document.getElementById('mes').value;
+    const año = document.getElementById('año').value;
+    const empresaId = {{ empresa.id }};
+    
+    // Crear formulario temporal para enviar datos
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("exportar_excel", empresa_id=empresa.id) }}';
+    
+    const mesInput = document.createElement('input');
+    mesInput.type = 'hidden';
+    mesInput.name = 'mes';
+    mesInput.value = mes;
+    
+    const añoInput = document.createElement('input');
+    añoInput.type = 'hidden';
+    añoInput.name = 'año';
+    añoInput.value = año;
+    
+    form.appendChild(mesInput);
+    form.appendChild(añoInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
 
 function imprimirPlanilla() {

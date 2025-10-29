@@ -25,12 +25,13 @@
                     </div>
                 </div>
 
-                {% if empresas %}
+                {% if empresas_con_conteos %}
                 <div class="row">
                     <div class="col-12">
                         <h5><i class="fas fa-building me-2"></i>Empresas Registradas</h5>
                         <div class="row">
-                            {% for empresa in empresas %}
+                            {% for item in empresas_con_conteos %}
+                            {% set empresa = item.empresa %}
                             <div class="col-md-6 col-lg-4 mb-3">
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
@@ -94,8 +95,8 @@
                 <i class="fas fa-users fa-2x text-success mb-2"></i>
                 <h5 class="card-title">
                     {% set total_empleados = 0 %}
-                    {% for empresa in empresas %}
-                        {% set total_empleados = total_empleados + empresa.empleados|length %}
+                    {% for item in empresas_con_conteos %}
+                        {% set total_empleados = total_empleados + item.empleados_activos %}
                     {% endfor %}
                     {{ total_empleados }}
                 </h5>
@@ -109,8 +110,8 @@
                 <i class="fas fa-file-invoice-dollar fa-2x text-warning mb-2"></i>
                 <h5 class="card-title">
                     {% set total_locadores = 0 %}
-                    {% for empresa in empresas %}
-                        {% set total_locadores = total_locadores + empresa.locadores|length %}
+                    {% for item in empresas_con_conteos %}
+                        {% set total_locadores = total_locadores + item.locadores_activos %}
                     {% endfor %}
                     {{ total_locadores }}
                 </h5>

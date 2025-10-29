@@ -27,15 +27,28 @@ if errorlevel 1 (
 echo Dependencias instaladas ✓
 echo.
 
-echo Creando base de datos usando SQLite directamente...
-python init_sqlite_directo.py
-if errorlevel 1 (
-    echo ERROR: No se pudo crear la base de datos
-    pause
-    exit /b 1
+echo Verificando base de datos...
+if exist sispla.db (
+    echo Base de datos existente encontrada
+    echo Actualizando con nuevas tablas...
+    python actualizar_bd.py
+    if errorlevel 1 (
+        echo ERROR: No se pudo actualizar la base de datos
+        pause
+        exit /b 1
+    )
+    echo Base de datos actualizada ✓
+) else (
+    echo Creando nueva base de datos...
+    python init_sqlite_directo.py
+    if errorlevel 1 (
+        echo ERROR: No se pudo crear la base de datos
+        pause
+        exit /b 1
+    )
+    echo Base de datos creada ✓
 )
 
-echo Base de datos creada ✓
 echo.
 
 echo Probando rutas del sistema...
@@ -49,6 +62,13 @@ echo.
 echo ========================================
 echo Sistema listo para usar
 echo ========================================
+echo.
+echo FUNCIONALIDADES DISPONIBLES:
+echo - Gestión de empresas con diferentes regímenes laborales
+echo - Gestión de empleados y locadores
+echo - Control de ausencias (faltas, permisos, vacaciones)
+echo - Gestión de préstamos y adelantos
+echo - Cálculo de planillas con descuentos automáticos
 echo.
 echo Iniciando servidor web...
 echo Abra su navegador en: http://localhost:5000

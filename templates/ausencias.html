@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-times me-2"></i>Control de Ausencias - {{ empresa.nombre }}
+                </h4>
+                <div>
+                    <a href="{{ url_for('nueva_ausencia', empresa_id=empresa.id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nueva Ausencia
+                    </a>
+                    <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Mes Actual: {{ mes }}/{{ año }}</h6>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="badge bg-info">Total Ausencias: {{ ausencias|length }}</span>
+                    </div>
+                </div>
+                
+                {% if ausencias %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Justificada</th>
+                                <th>Horas Perdidas</th>
+                                <th>Motivo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ausencia in ausencias %}
+                            <tr>
+                                <td>
+                                    <strong>{{ ausencia.empleado.nombres }} {{ ausencia.empleado.apellidos }}</strong>
+                                    <br><small class="text-muted">{{ ausencia.empleado.dni }}</small>
+                                </td>
+                                <td>{{ ausencia.fecha.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    {% if ausencia.tipo == 'falta' %}
+                                        <span class="badge bg-danger">Falta</span>
+                                    {% elif ausencia.tipo == 'permiso' %}
+                                        <span class="badge bg-warning">Permiso</span>
+                                    {% elif ausencia.tipo == 'vacaciones' %}
+                                        <span class="badge bg-success">Vacaciones</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ ausencia.tipo.title() }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ausencia.justificada %}
+                                        <span class="badge bg-success">Sí</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ausencia.horas_perdidas }} hrs</td>
+                                <td>
+                                    {% if ausencia.motivo %}
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ ausencia.motivo }}">
+                                            {{ ausencia.motivo }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Sin motivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if not ausencia.justificada %}
+                                        <button class="btn btn-outline-success" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#justificarModal{{ ausencia.id }}"
+                                                title="Justificar">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger" 
+                                                onclick="eliminarAusencia({{ ausencia.id }})"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay ausencias registradas para este mes</h5>
+                    <p class="text-muted">Haga clic en "Nueva Ausencia" para registrar una ausencia</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para justificar ausencias -->
+{% for ausencia in ausencias %}
+{% if not ausencia.justificada %}
+<div class="modal fade" id="justificarModal{{ ausencia.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Justificar Ausencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('justificar_ausencia', ausencia_id=ausencia.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Empleado:</label>
+                        <p class="form-control-plaintext">{{ ausencia.empleado.nombres }} {{ ausencia.empleado.apellidos }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha:</label>
+                        <p class="form-control-plaintext">{{ ausencia.fecha.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo de Justificación:</label>
+                        <textarea class="form-control" name="motivo" rows="3" required>{{ ausencia.motivo or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Justificar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+function eliminarAusencia(ausenciaId) {
+    if (confirm('¿Está seguro de que desea eliminar esta ausencia?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/ausencia/eliminar/' + ausenciaId;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

@@ -47,10 +47,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">{{ empresa.empleados|length }}</span>
+                                    <span class="badge bg-primary">{{ empresa.empleados|selectattr('activo')|list|length }}</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ empresa.locadores|length }}</span>
+                                    <span class="badge bg-secondary">{{ empresa.locadores|selectattr('activo')|list|length }}</span>
                                 </td>
                                 <td>{{ empresa.fecha_creacion.strftime('%d/%m/%Y') }}</td>
                                 <td>
@@ -63,14 +63,12 @@
                                            class="btn btn-outline-success" title="Calcular Planilla">
                                             <i class="fas fa-calculator"></i>
                                         </a>
-                                        <a href="{{ url_for('ausencias', empresa_id=empresa.id) }}" 
-                                           class="btn btn-outline-warning" title="Control de Ausencias">
+                                        <button class="btn btn-outline-warning" title="Control de Ausencias (Próximamente)" disabled>
                                             <i class="fas fa-calendar-times"></i>
-                                        </a>
-                                        <a href="{{ url_for('deudas', empresa_id=empresa.id) }}" 
-                                           class="btn btn-outline-info" title="Deudas Internas">
+                                        </button>
+                                        <button class="btn btn-outline-info" title="Deudas Internas (Próximamente)" disabled>
                                             <i class="fas fa-money-bill-wave"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
