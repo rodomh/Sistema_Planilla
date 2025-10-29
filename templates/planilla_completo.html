@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-calculator me-2"></i>Calculadora de Planilla - {{ empresa.nombre }}
+                    {% if empresa.regimen_laboral == 'microempresa' %}
+                        <span class="badge bg-warning ms-2">Microempresa</span>
+                    {% elif empresa.regimen_laboral == 'pequeña_empresa' %}
+                        <span class="badge bg-info ms-2">Pequeña Empresa</span>
+                    {% else %}
+                        <span class="badge bg-success ms-2">Régimen General</span>
+                    {% endif %}
+                </h4>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" onclick="calcularPlanilla()">
+                        <i class="fas fa-calculator me-2"></i>Calcular Planilla
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="exportarPlanilla()" id="exportBtn" disabled>
+                        <i class="fas fa-download me-2"></i>Exportar Excel
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Selector de período -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label for="mes" class="form-label">Mes</label>
+                        <select class="form-select" id="mes">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="año" class="form-label">Año</label>
+                        <select class="form-select" id="año">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary" onclick="calcularPlanilla()">
+                            <i class="fas fa-calculator me-2"></i>Calcular Planilla
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultados de la planilla -->
+                {% if resultado %}
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle me-2"></i>Planilla Calculada</h5>
+                    <p><strong>Período:</strong> {{ resultado.mes }}/{{ resultado.año }}</p>
+                    <p><strong>Empresa:</strong> {{ resultado.empresa.nombre }} ({{ resultado.empresa.regimen_laboral }})</p>
+                </div>
+
+                <!-- Empleados -->
+                {% if resultado.empleados %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>Empleados ({{ resultado.empleados|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Sueldo Base</th>
+                                        <th>Sueldo Ajustado</th>
+                                        <th>Tipo Pago</th>
+                                        <th>Vacaciones</th>
+                                        <th>CTS</th>
+                                        <th>Gratificación</th>
+                                        <th>Asignación Familiar</th>
+                                        <th>Pensión</th>
+                                        <th>Impuesto Renta</th>
+                                        <th>Descuento Alimentos</th>
+                                        <th>Préstamos</th>
+                                        <th>Adelantos</th>
+                                        <th>Total Ingresos</th>
+                                        <th>Total Descuentos</th>
+                                        <th>Neto a Pagar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emp in resultado.empleados %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ emp.empleado.nombres }} {{ emp.empleado.apellidos }}</strong><br>
+                                            <small class="text-muted">DNI: {{ emp.empleado.dni }}</small><br>
+                                            <small class="text-muted">Banco: {{ emp.empleado.banco or 'No especificado' }}</small>
+                                        </td>
+                                        <td>S/. {{ "%.2f"|format(emp.sueldo_base) }}</td>
+                                        <td>
+                                            <strong>S/. {{ "%.2f"|format(emp.sueldo_ajustado) }}</strong>
+                                            {% if emp.empleado.tipo_pago == 'quincenal' %}
+                                                <br><small class="text-warning">(50% quincenal)</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if emp.empleado.tipo_pago == 'quincenal' %}
+                                                <span class="badge bg-warning">Quincenal</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Mensual</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>S/. {{ "%.2f"|format(emp.vacaciones) }}</td>
+                                        <td>S/. {{ "%.2f"|format(emp.cts) }}</td>
+                                        <td>S/. {{ "%.2f"|format(emp.gratificacion) }}</td>
+                                        <td>S/. {{ "%.2f"|format(emp.asignacion_familiar) }}</td>
+                                        <td>S/. {{ "%.2f"|format(emp.pension) }}</td>
+                                        <td>S/. {{ "%.2f"|format(emp.impuesto_renta) }}</td>
+                                        <td>
+                                            {% if emp.descuento_alimentos > 0 %}
+                                                <span class="text-danger">S/. {{ "%.2f"|format(emp.descuento_alimentos) }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if emp.descuentos.prestamos > 0 %}
+                                                <span class="text-warning">S/. {{ "%.2f"|format(emp.descuentos.prestamos) }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if emp.descuentos.adelantos > 0 %}
+                                                <span class="text-warning">S/. {{ "%.2f"|format(emp.descuentos.adelantos) }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><strong>S/. {{ "%.2f"|format(emp.total_ingresos) }}</strong></td>
+                                        <td><strong>S/. {{ "%.2f"|format(emp.total_descuentos) }}</strong></td>
+                                        <td><strong class="text-success">S/. {{ "%.2f"|format(emp.neto) }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Locadores -->
+                {% if resultado.locadores %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>Locadores ({{ resultado.locadores|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Locador</th>
+                                        <th>Monto Base</th>
+                                        <th>Retención 4ta Cat.</th>
+                                        <th>Descuento Alimentos</th>
+                                        <th>Total Ingresos</th>
+                                        <th>Total Descuentos</th>
+                                        <th>Neto a Pagar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for loc in resultado.locadores %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ loc.locador.nombres }} {{ loc.locador.apellidos }}</strong><br>
+                                            <small class="text-muted">DNI: {{ loc.locador.dni }}</small><br>
+                                            <small class="text-muted">Banco: {{ loc.locador.banco or 'No especificado' }}</small>
+                                        </td>
+                                        <td>S/. {{ "%.2f"|format(loc.monto_base) }}</td>
+                                        <td>S/. {{ "%.2f"|format(loc.retencion_4ta) }}</td>
+                                        <td>
+                                            {% if loc.descuento_alimentos > 0 %}
+                                                <span class="text-danger">S/. {{ "%.2f"|format(loc.descuento_alimentos) }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><strong>S/. {{ "%.2f"|format(loc.total_ingresos) }}</strong></td>
+                                        <td><strong>S/. {{ "%.2f"|format(loc.total_descuentos) }}</strong></td>
+                                        <td><strong class="text-success">S/. {{ "%.2f"|format(loc.neto) }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Totales -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>Totales Generales
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 class="text-primary">S/. {{ "%.2f"|format(resultado.totales.total_ingresos) }}</h4>
+                                <p class="text-muted">Total Ingresos</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-danger">S/. {{ "%.2f"|format(resultado.totales.total_descuentos) }}</h4>
+                                <p class="text-muted">Total Descuentos</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-success">S/. {{ "%.2f"|format(resultado.totales.total_neto) }}</h4>
+                                <p class="text-muted">Neto a Pagar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Sin resultados -->
+                <div class="text-center py-5">
+                    <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Seleccione un período y calcule la planilla</h5>
+                    <p class="text-muted">Use el formulario superior para calcular la planilla del período deseado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function calcularPlanilla() {
+    const mes = document.getElementById('mes').value;
+    const año = document.getElementById('año').value;
+    const empresaId = {{ empresa.id }};
+    
+    if (!mes || !año) {
+        alert('Por favor seleccione mes y año');
+        return;
+    }
+    
+    // Crear formulario para enviar datos
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("calcular_planilla", empresa_id=empresa.id) }}';
+    
+    const mesInput = document.createElement('input');
+    mesInput.type = 'hidden';
+    mesInput.name = 'mes';
+    mesInput.value = mes;
+    
+    const añoInput = document.createElement('input');
+    añoInput.type = 'hidden';
+    añoInput.name = 'año';
+    añoInput.value = año;
+    
+    form.appendChild(mesInput);
+    form.appendChild(añoInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+function exportarPlanilla() {
+    const mes = document.getElementById('mes').value;
+    const año = document.getElementById('año').value;
+    const empresaId = {{ empresa.id }};
+    
+    if (!mes || !año) {
+        alert('Por favor seleccione mes y año');
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("exportar_excel", empresa_id=empresa.id) }}';
+    
+    const mesInput = document.createElement('input');
+    mesInput.type = 'hidden';
+    mesInput.name = 'mes';
+    mesInput.value = mes;
+    
+    const añoInput = document.createElement('input');
+    añoInput.type = 'hidden';
+    añoInput.name = 'año';
+    añoInput.value = año;
+    
+    form.appendChild(mesInput);
+    form.appendChild(añoInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+// Habilitar botón de exportar cuando hay resultados
+{% if resultado %}
+document.getElementById('exportBtn').disabled = false;
+{% endif %}
+</script>
+{% endblock %}

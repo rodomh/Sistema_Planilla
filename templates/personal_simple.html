@@ -22,9 +22,6 @@
                     <a href="{{ url_for('nuevo_locador', empresa_id=empresa.id) }}" class="btn btn-info">
                         <i class="fas fa-file-invoice me-2"></i>Nuevo Locador
                     </a>
-                    <a href="{{ url_for('cargar_excel', empresa_id=empresa.id) }}" class="btn btn-success">
-                        <i class="fas fa-file-excel me-2"></i>Cargar desde Excel
-                    </a>
                 </div>
             </div>
             <div class="card-body">
@@ -56,7 +53,6 @@
                                         <th>Fecha Ingreso</th>
                                         <th>Pensión</th>
                                         <th>Estado</th>
-                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -81,21 +77,6 @@
                                             {% else %}
                                                 <span class="badge bg-secondary">Inactivo</span>
                                             {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ url_for('editar_empleado', empleado_id=empleado.id) }}" 
-                                                   class="btn btn-outline-warning" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form method="POST" action="{{ url_for('eliminar_empleado', empleado_id=empleado.id) }}" 
-                                                      style="display: inline;" 
-                                                      onsubmit="return confirm('¿Está seguro de eliminar este empleado?')">
-                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -126,7 +107,6 @@
                                         <th>Monto Mensual</th>
                                         <th>Fecha Inicio</th>
                                         <th>Estado</th>
-                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -146,21 +126,6 @@
                                             {% else %}
                                                 <span class="badge bg-secondary">Inactivo</span>
                                             {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ url_for('editar_locador', locador_id=locador.id) }}" 
-                                                   class="btn btn-outline-warning" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form method="POST" action="{{ url_for('eliminar_locador', locador_id=locador.id) }}" 
-                                                      style="display: inline;" 
-                                                      onsubmit="return confirm('¿Está seguro de eliminar este locador?')">
-                                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -230,16 +195,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block scripts %}
-<script>
-function toggleSuspension(locadorId, isSuspended) {
-    const action = isSuspended ? 'activar' : 'suspender';
-    if (confirm(`¿Está seguro de que desea ${action} este locador?`)) {
-        // Aquí se implementaría la lógica para cambiar el estado
-        alert('Función en desarrollo');
-    }
-}
-</script>
-{% endblock %}
-

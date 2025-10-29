@@ -3,13 +3,19 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 import os
 import io
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sispla_peru_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sispla.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Crear directorio de uploads si no existe
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -41,6 +47,9 @@ class Empleado(db.Model):
     email = db.Column(db.String(100))
     tipo_pension = db.Column(db.String(20), default='ONP')
     afp_codigo = db.Column(db.String(10))
+    cuenta_bancaria = db.Column(db.String(20))
+    banco = db.Column(db.String(50))
+    tipo_pago = db.Column(db.String(20), default='mensual')
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -57,6 +66,8 @@ class Locador(db.Model):
     direccion = db.Column(db.String(500))
     telefono = db.Column(db.String(20))
     email = db.Column(db.String(100))
+    cuenta_bancaria = db.Column(db.String(20))
+    banco = db.Column(db.String(50))
     suspendido = db.Column(db.Boolean, default=False)
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
@@ -159,6 +170,250 @@ def nuevo_locador(empresa_id):
         return redirect(url_for('personal', empresa_id=empresa_id))
     
     return render_template('nuevo_locador.html', empresa=empresa)
+
+@app.route('/empleado/editar/<int:empleado_id>', methods=['GET', 'POST'])
+def editar_empleado(empleado_id):
+    """Editar empleado existente"""
+    empleado = Empleado.query.get_or_404(empleado_id)
+    empresa = Empresa.query.get_or_404(empleado.empresa_id)
+    
+    if request.method == 'POST':
+        empleado.nombres = request.form['nombres']
+        empleado.apellidos = request.form['apellidos']
+        empleado.dni = request.form['dni']
+        empleado.sueldo_base = float(request.form['sueldo_base'])
+        empleado.fecha_ingreso = datetime.strptime(request.form['fecha_ingreso'], '%Y-%m-%d').date()
+        empleado.tipo_pension = request.form['tipo_pension']
+        empleado.afp_codigo = request.form.get('afp_codigo', '')
+        empleado.cuenta_bancaria = request.form.get('cuenta_bancaria', '')
+        empleado.banco = request.form.get('banco', '')
+        empleado.tipo_pago = request.form.get('tipo_pago', 'mensual')
+        empleado.activo = request.form.get('activo') == 'on'
+        
+        db.session.commit()
+        flash('Empleado actualizado exitosamente', 'success')
+        return redirect(url_for('personal', empresa_id=empresa.id))
+    
+    return render_template('editar_empleado.html', empleado=empleado, empresa=empresa)
+
+@app.route('/locador/editar/<int:locador_id>', methods=['GET', 'POST'])
+def editar_locador(locador_id):
+    """Editar locador existente"""
+    locador = Locador.query.get_or_404(locador_id)
+    empresa = Empresa.query.get_or_404(locador.empresa_id)
+    
+    if request.method == 'POST':
+        locador.nombres = request.form['nombres']
+        locador.apellidos = request.form['apellidos']
+        locador.dni = request.form['dni']
+        locador.monto_mensual = float(request.form['monto_mensual'])
+        locador.fecha_inicio = datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date()
+        locador.suspendido = request.form.get('suspendido') == 'on'
+        locador.activo = request.form.get('activo') == 'on'
+        locador.cuenta_bancaria = request.form.get('cuenta_bancaria', '')
+        locador.banco = request.form.get('banco', '')
+        
+        db.session.commit()
+        flash('Locador actualizado exitosamente', 'success')
+        return redirect(url_for('personal', empresa_id=empresa.id))
+    
+    return render_template('editar_locador.html', locador=locador, empresa=empresa)
+
+@app.route('/empleado/eliminar/<int:empleado_id>', methods=['POST'])
+def eliminar_empleado(empleado_id):
+    """Eliminar empleado (marcar como inactivo)"""
+    empleado = Empleado.query.get_or_404(empleado_id)
+    empresa_id = empleado.empresa_id
+    empleado.activo = False
+    db.session.commit()
+    flash('Empleado eliminado exitosamente', 'success')
+    return redirect(url_for('personal', empresa_id=empresa_id))
+
+@app.route('/locador/eliminar/<int:locador_id>', methods=['POST'])
+def eliminar_locador(locador_id):
+    """Eliminar locador (marcar como inactivo)"""
+    locador = Locador.query.get_or_404(locador_id)
+    empresa_id = locador.empresa_id
+    locador.activo = False
+    db.session.commit()
+    flash('Locador eliminado exitosamente', 'success')
+    return redirect(url_for('personal', empresa_id=empresa_id))
+
+@app.route('/cargar_excel/<int:empresa_id>', methods=['GET', 'POST'])
+def cargar_excel(empresa_id):
+    """Cargar personal desde archivo Excel"""
+    empresa = Empresa.query.get_or_404(empresa_id)
+    
+    if request.method == 'POST':
+        if 'archivo' not in request.files:
+            flash('No se seleccionó ningún archivo', 'error')
+            return redirect(request.url)
+        
+        archivo = request.files['archivo']
+        if archivo.filename == '':
+            flash('No se seleccionó ningún archivo', 'error')
+            return redirect(request.url)
+        
+        if archivo and archivo.filename.endswith('.xlsx'):
+            try:
+                # Guardar archivo temporalmente
+                filename = secure_filename(archivo.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                archivo.save(filepath)
+                
+                # Procesar archivo Excel
+                wb = load_workbook(filepath)
+                
+                # Procesar empleados si existe la hoja
+                if 'Empleados' in wb.sheetnames:
+                    ws_empleados = wb['Empleados']
+                    empleados_cargados = 0
+                    
+                    for row in ws_empleados.iter_rows(min_row=2, values_only=True):
+                        if row[0] and row[1] and row[2]:  # Nombres, Apellidos, DNI
+                            empleado = Empleado(
+                                empresa_id=empresa_id,
+                                nombres=str(row[0]),
+                                apellidos=str(row[1]),
+                                dni=str(row[2]),
+                                sueldo_base=float(row[3]) if row[3] else 0,
+                                fecha_ingreso=row[4] if row[4] else date.today(),
+                                tipo_pension=str(row[5]) if row[5] else 'ONP',
+                                afp_codigo=str(row[6]) if row[6] else '',
+                                cuenta_bancaria=str(row[7]) if row[7] else '',
+                                banco=str(row[8]) if row[8] else '',
+                                tipo_pago=str(row[9]) if row[9] else 'mensual',
+                                activo=True
+                            )
+                            db.session.add(empleado)
+                            empleados_cargados += 1
+                    
+                    db.session.commit()
+                    flash(f'Se cargaron {empleados_cargados} empleados exitosamente', 'success')
+                
+                # Procesar locadores si existe la hoja
+                if 'Locadores' in wb.sheetnames:
+                    ws_locadores = wb['Locadores']
+                    locadores_cargados = 0
+                    
+                    for row in ws_locadores.iter_rows(min_row=2, values_only=True):
+                        if row[0] and row[1] and row[2]:  # Nombres, Apellidos, DNI
+                            locador = Locador(
+                                empresa_id=empresa_id,
+                                nombres=str(row[0]),
+                                apellidos=str(row[1]),
+                                dni=str(row[2]),
+                                monto_mensual=float(row[3]) if row[3] else 0,
+                                fecha_inicio=row[4] if row[4] else date.today(),
+                                suspendido=bool(row[5]) if row[5] is not None else False,
+                                cuenta_bancaria=str(row[6]) if row[6] else '',
+                                banco=str(row[7]) if row[7] else '',
+                                activo=True
+                            )
+                            db.session.add(locador)
+                            locadores_cargados += 1
+                    
+                    db.session.commit()
+                    flash(f'Se cargaron {locadores_cargados} locadores exitosamente', 'success')
+                
+                # Eliminar archivo temporal
+                os.remove(filepath)
+                
+                return redirect(url_for('personal', empresa_id=empresa_id))
+                
+            except Exception as e:
+                flash(f'Error al procesar el archivo: {str(e)}', 'error')
+                return redirect(request.url)
+        else:
+            flash('El archivo debe ser un Excel (.xlsx)', 'error')
+            return redirect(request.url)
+    
+    return render_template('cargar_excel.html', empresa=empresa)
+
+@app.route('/descargar_plantilla/<int:empresa_id>')
+def descargar_plantilla(empresa_id):
+    """Descargar plantilla Excel para carga de personal"""
+    empresa = Empresa.query.get_or_404(empresa_id)
+    
+    # Crear libro de trabajo
+    wb = Workbook()
+    
+    # Hoja de empleados
+    ws_empleados = wb.active
+    ws_empleados.title = "Empleados"
+    
+    # Encabezados para empleados
+    headers_empleados = [
+        'Nombres', 'Apellidos', 'DNI', 'Sueldo Base', 'Fecha Ingreso',
+        'Tipo Pensión', 'AFP Código', 'Cuenta Bancaria', 'Banco', 'Tipo Pago'
+    ]
+    
+    # Escribir encabezados
+    for col, header in enumerate(headers_empleados, 1):
+        cell = ws_empleados.cell(row=1, column=col, value=header)
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Agregar fila de ejemplo
+    ejemplo_empleado = [
+        'Juan', 'Pérez García', '12345678', 1500.00, '2024-01-15',
+        'ONP', '', '1234567890123456', 'BCP', 'mensual'
+    ]
+    
+    for col, valor in enumerate(ejemplo_empleado, 1):
+        ws_empleados.cell(row=2, column=col, value=valor)
+    
+    # Hoja de locadores
+    ws_locadores = wb.create_sheet("Locadores")
+    
+    # Encabezados para locadores
+    headers_locadores = [
+        'Nombres', 'Apellidos', 'DNI', 'Monto Mensual', 'Fecha Inicio',
+        'Suspendido', 'Cuenta Bancaria', 'Banco'
+    ]
+    
+    # Escribir encabezados
+    for col, header in enumerate(headers_locadores, 1):
+        cell = ws_locadores.cell(row=1, column=col, value=header)
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Agregar fila de ejemplo
+    ejemplo_locador = [
+        'María', 'Rodríguez López', '87654321', 2000.00, '2024-02-01',
+        False, '9876543210987654', 'BBVA'
+    ]
+    
+    for col, valor in enumerate(ejemplo_locador, 1):
+        ws_locadores.cell(row=2, column=col, value=valor)
+    
+    # Ajustar ancho de columnas
+    for ws in [ws_empleados, ws_locadores]:
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 20)
+            ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Guardar en memoria
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    # Crear respuesta
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = f'attachment; filename=plantilla_carga_{empresa.nombre}.xlsx'
+    
+    return response
 
 @app.route('/planilla/<int:empresa_id>')
 def planilla(empresa_id):

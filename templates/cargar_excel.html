@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-excel me-2"></i>Cargar Personal desde Excel - {{ empresa.nombre }}
+                </h4>
+                <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Personal
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Instrucciones -->
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle me-2"></i>Instrucciones para la Carga Masiva</h5>
+                    <ol>
+                        <li>Descarga la plantilla Excel haciendo clic en el botón "Descargar Plantilla"</li>
+                        <li>Completa la plantilla con los datos de empleados y locadores</li>
+                        <li>Guarda el archivo en formato .xlsx</li>
+                        <li>Sube el archivo completado usando el formulario de abajo</li>
+                    </ol>
+                </div>
+
+                <!-- Botón para descargar plantilla -->
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('descargar_plantilla', empresa_id=empresa.id) }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-download me-2"></i>Descargar Plantilla Excel
+                    </a>
+                </div>
+
+                <!-- Formulario de carga -->
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-upload me-2"></i>Subir Archivo Excel</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="archivo" class="form-label">Seleccionar archivo Excel (.xlsx)</label>
+                                        <input type="file" class="form-control" id="archivo" name="archivo" 
+                                               accept=".xlsx" required>
+                                        <div class="form-text">
+                                            Solo se permiten archivos en formato .xlsx
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary me-md-2">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-upload me-2"></i>Cargar Archivo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información sobre el formato -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-table me-2"></i>Formato de la Plantilla</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Columna</th>
+                                                <th>Descripción</th>
+                                                <th>Empleados</th>
+                                                <th>Locadores</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Tipo</strong></td>
+                                                <td>Especificar si es "empleado" o "locador"</td>
+                                                <td>empleado</td>
+                                                <td>locador</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Nombres</strong></td>
+                                                <td>Nombres de la persona</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Apellidos</strong></td>
+                                                <td>Apellidos de la persona</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>DNI</strong></td>
+                                                <td>Número de DNI (8 dígitos)</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Sueldo/Monto</strong></td>
+                                                <td>Sueldo base (empleados) o monto mensual (locadores)</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Fecha Ingreso/Inicio</strong></td>
+                                                <td>Fecha de ingreso (empleados) o inicio (locadores)</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Fecha Nacimiento</strong></td>
+                                                <td>Fecha de nacimiento (solo empleados)</td>
+                                                <td>✓</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Dirección</strong></td>
+                                                <td>Dirección de residencia</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Teléfono</strong></td>
+                                                <td>Número de teléfono</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Email</strong></td>
+                                                <td>Correo electrónico</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Tipo Pensión</strong></td>
+                                                <td>ONP o AFP (solo empleados)</td>
+                                                <td>✓</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Código AFP</strong></td>
+                                                <td>Código de AFP si aplica (solo empleados)</td>
+                                                <td>✓</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Cuenta Bancaria</strong></td>
+                                                <td>Número de cuenta bancaria</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Banco</strong></td>
+                                                <td>Nombre del banco</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Tipo Pago</strong></td>
+                                                <td>mensual o quincenal (solo empleados)</td>
+                                                <td>✓</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Descuento Alimentos</strong></td>
+                                                <td>Monto de descuento por alimentos</td>
+                                                <td>✓</td>
+                                                <td>✓</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Notas Importantes:</h6>
+                                    <ul class="mb-0">
+                                        <li>La primera fila debe contener los encabezados (no se modifica)</li>
+                                        <li>Use "empleado" o "locador" en la columna "Tipo" para identificar el tipo de personal</li>
+                                        <li>Las fechas deben estar en formato YYYY-MM-DD</li>
+                                        <li>Los montos deben ser números sin símbolos de moneda</li>
+                                        <li>Para empleados, el tipo de pago puede ser "mensual" o "quincenal"</li>
+                                        <li>Para locadores, deje vacías las columnas específicas de empleados</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>Nuevo Locador - {{ empresa.nombre }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- Información Personal -->
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-user me-2"></i>Información Personal
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="nombres" class="form-label">Nombres *</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="apellidos" class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="dni" class="form-label">DNI *</label>
+                                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+                                <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="monto_mensual" class="form-label">Monto Mensual (S/.) *</label>
+                                <input type="number" class="form-control" id="monto_mensual" name="monto_mensual" step="0.01" min="0" required>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="suspendido" name="suspendido">
+                                <label class="form-check-label" for="suspendido">
+                                    Suspendido
+                                </label>
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Si está suspendido, no se aplica retención 4ta categoría
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información Bancaria -->
+                        <div class="col-md-6">
+                            <h5 class="text-info mb-3">
+                                <i class="fas fa-university me-2"></i>Información Bancaria
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="banco" class="form-label">Banco</label>
+                                <select class="form-select" id="banco" name="banco">
+                                    <option value="">Seleccionar Banco</option>
+                                    <option value="BCP">Banco de Crédito del Perú</option>
+                                    <option value="BBVA">BBVA Continental</option>
+                                    <option value="SCOTIABANK">Scotiabank</option>
+                                    <option value="INTERBANK">Interbank</option>
+                                    <option value="BANBIF">BanBif</option>
+                                    <option value="BANCO PICHINCHA">Banco Pichincha</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="cuenta_bancaria" class="form-label">Número de Cuenta</label>
+                                <input type="text" class="form-control" id="cuenta_bancaria" name="cuenta_bancaria" maxlength="20">
+                            </div>
+                            
+                            <h5 class="text-warning mb-3 mt-4">
+                                <i class="fas fa-gavel me-2"></i>Descuentos Judiciales
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="descuento_alimentos" class="form-label">Descuento por Alimentos (S/.)</label>
+                                <input type="number" class="form-control" id="descuento_alimentos" name="descuento_alimentos" step="0.01" min="0" value="0">
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Solo se aplica en el pago mensual (fin de mes)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Locador
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Validación de DNI
+document.getElementById('dni').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').substring(0, 8);
+});
+</script>
+{% endblock %}

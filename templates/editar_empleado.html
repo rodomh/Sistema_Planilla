@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>Editar Empleado - {{ empresa.nombre }}
+                </h4>
+                <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombres" class="form-label">Nombres *</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" 
+                                       value="{{ empleado.nombres }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellidos" class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" 
+                                       value="{{ empleado.apellidos }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dni" class="form-label">DNI *</label>
+                                <input type="text" class="form-control" id="dni" name="dni" 
+                                       value="{{ empleado.dni }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sueldo_base" class="form-label">Sueldo Base *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">S/.</span>
+                                    <input type="number" class="form-control" id="sueldo_base" name="sueldo_base" 
+                                           value="{{ empleado.sueldo_base }}" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_ingreso" class="form-label">Fecha de Ingreso *</label>
+                                <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" 
+                                       value="{{ empleado.fecha_ingreso.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipo_pension" class="form-label">Tipo de Pensión *</label>
+                                <select class="form-select" id="tipo_pension" name="tipo_pension" required>
+                                    <option value="ONP" {% if empleado.tipo_pension == 'ONP' %}selected{% endif %}>ONP (13%)</option>
+                                    <option value="AFP" {% if empleado.tipo_pension == 'AFP' %}selected{% endif %}>AFP</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="afp_codigo" class="form-label">Código AFP</label>
+                                <input type="text" class="form-control" id="afp_codigo" name="afp_codigo" 
+                                       value="{{ empleado.afp_codigo or '' }}">
+                                <div class="form-text">Solo si seleccionó AFP</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipo_pago" class="form-label">Tipo de Pago</label>
+                                <select class="form-select" id="tipo_pago" name="tipo_pago">
+                                    <option value="mensual" {% if empleado.tipo_pago == 'mensual' %}selected{% endif %}>Mensual</option>
+                                    <option value="quincenal" {% if empleado.tipo_pago == 'quincenal' %}selected{% endif %}>Quincenal</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="cuenta_bancaria" class="form-label">Cuenta Bancaria</label>
+                                <input type="text" class="form-control" id="cuenta_bancaria" name="cuenta_bancaria" 
+                                       value="{{ empleado.cuenta_bancaria or '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="banco" class="form-label">Banco</label>
+                                <input type="text" class="form-control" id="banco" name="banco" 
+                                       value="{{ empleado.banco or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="activo" name="activo" 
+                                       {% if empleado.activo %}checked{% endif %}>
+                                <label class="form-check-label" for="activo">
+                                    Empleado Activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

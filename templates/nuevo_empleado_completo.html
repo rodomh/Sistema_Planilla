@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Nuevo Empleado - {{ empresa.nombre }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- Información Personal -->
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-user me-2"></i>Información Personal
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="nombres" class="form-label">Nombres *</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="apellidos" class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="dni" class="form-label">DNI *</label>
+                                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="direccion" class="form-label">Dirección</label>
+                                <textarea class="form-control" id="direccion" name="direccion" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                        </div>
+                        
+                        <!-- Información Laboral -->
+                        <div class="col-md-6">
+                            <h5 class="text-success mb-3">
+                                <i class="fas fa-briefcase me-2"></i>Información Laboral
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="sueldo_base" class="form-label">Sueldo Base (S/.) *</label>
+                                <input type="number" class="form-control" id="sueldo_base" name="sueldo_base" step="0.01" min="0" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fecha_ingreso" class="form-label">Fecha de Ingreso *</label>
+                                <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="tipo_pago" class="form-label">Tipo de Pago *</label>
+                                <select class="form-select" id="tipo_pago" name="tipo_pago" required>
+                                    <option value="mensual">Mensual (100%)</option>
+                                    <option value="quincenal">Quincenal (50%)</option>
+                                </select>
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Quincenal: Se paga 50% del sueldo base
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="tipo_pension" class="form-label">Tipo de Pensión *</label>
+                                <select class="form-select" id="tipo_pension" name="tipo_pension" required>
+                                    <option value="ONP">ONP (13%)</option>
+                                    <option value="AFP">AFP (12%)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3" id="afp_codigo_group" style="display: none;">
+                                <label for="afp_codigo" class="form-label">Código AFP</label>
+                                <select class="form-select" id="afp_codigo" name="afp_codigo">
+                                    <option value="">Seleccionar AFP</option>
+                                    <option value="PRIMA">Prima AFP</option>
+                                    <option value="PROFUTURO">Profuturo AFP</option>
+                                    <option value="INTEGRA">Integra AFP</option>
+                                    <option value="HABITAT">Habitat AFP</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <!-- Información Bancaria -->
+                        <div class="col-md-6">
+                            <h5 class="text-info mb-3">
+                                <i class="fas fa-university me-2"></i>Información Bancaria
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="banco" class="form-label">Banco</label>
+                                <select class="form-select" id="banco" name="banco">
+                                    <option value="">Seleccionar Banco</option>
+                                    <option value="BCP">Banco de Crédito del Perú</option>
+                                    <option value="BBVA">BBVA Continental</option>
+                                    <option value="SCOTIABANK">Scotiabank</option>
+                                    <option value="INTERBANK">Interbank</option>
+                                    <option value="BANBIF">BanBif</option>
+                                    <option value="BANCO PICHINCHA">Banco Pichincha</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="cuenta_bancaria" class="form-label">Número de Cuenta</label>
+                                <input type="text" class="form-control" id="cuenta_bancaria" name="cuenta_bancaria" maxlength="20">
+                            </div>
+                        </div>
+                        
+                        <!-- Descuentos Judiciales -->
+                        <div class="col-md-6">
+                            <h5 class="text-warning mb-3">
+                                <i class="fas fa-gavel me-2"></i>Descuentos Judiciales
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="descuento_alimentos" class="form-label">Descuento por Alimentos (S/.)</label>
+                                <input type="number" class="form-control" id="descuento_alimentos" name="descuento_alimentos" step="0.01" min="0" value="0">
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Solo se aplica en el pago mensual (fin de mes)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('personal', empresa_id=empresa.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Empleado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('tipo_pension').addEventListener('change', function() {
+    const afpGroup = document.getElementById('afp_codigo_group');
+    const afpSelect = document.getElementById('afp_codigo');
+    
+    if (this.value === 'AFP') {
+        afpGroup.style.display = 'block';
+        afpSelect.required = true;
+    } else {
+        afpGroup.style.display = 'none';
+        afpSelect.required = false;
+        afpSelect.value = '';
+    }
+});
+
+// Validación de DNI
+document.getElementById('dni').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').substring(0, 8);
+});
+
+// Validación de teléfono
+document.getElementById('telefono').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+});
+</script>
+{% endblock %}
