@@ -1,57 +1,56 @@
 #!/bin/bash
-
 echo "========================================"
-echo "Sistema de Planillas Multirégimen Perú"
+echo "   SISTEMA DE PLANILLAS - PRODUCCION"
 echo "========================================"
 echo
+echo "Iniciando sistema..."
+echo
 
-echo "Verificando Python..."
-if ! command -v python3 &> /dev/null; then
-    echo "ERROR: Python3 no está instalado"
-    echo "Por favor instale Python 3.7 o superior"
+# Verificar si existe el entorno virtual
+if [ ! -f "venv/bin/activate" ]; then
+    echo "ERROR: Entorno virtual no encontrado"
+    echo "Ejecute primero: ./instalar_produccion_linux.sh"
     exit 1
 fi
 
-echo "Python encontrado ✓"
-echo
+# Activar entorno virtual
+source venv/bin/activate
 
-echo "Instalando dependencias..."
-pip3 install -r requirements.txt
+# Verificar Python
+python3 --version
 if [ $? -ne 0 ]; then
-    echo "ERROR: No se pudieron instalar las dependencias"
+    echo "ERROR: Python no encontrado"
     exit 1
 fi
 
-echo "Dependencias instaladas ✓"
-echo
-
-echo "Inicializando base de datos..."
-python3 init_db.py
-if [ $? -ne 0 ]; then
-    echo "ERROR: No se pudo inicializar la base de datos"
+# Verificar archivos necesarios
+if [ ! -f "app_completo.py" ]; then
+    echo "ERROR: app_completo.py no encontrado"
     exit 1
 fi
 
-echo "Base de datos inicializada ✓"
-echo
-
-echo "Ejecutando pruebas del sistema..."
-python3 test_sistema.py
-if [ $? -ne 0 ]; then
-    echo "ADVERTENCIA: Las pruebas fallaron, pero el sistema puede funcionar"
-    echo
+if [ ! -f "requirements.txt" ]; then
+    echo "ERROR: requirements.txt no encontrado"
+    exit 1
 fi
 
+# Crear directorios necesarios
+mkdir -p instance uploads backup logs
+
 echo
 echo "========================================"
-echo "Sistema listo para usar"
+echo "   INICIANDO SERVIDOR..."
 echo "========================================"
 echo
-echo "Iniciando servidor web..."
-echo "Abra su navegador en: http://localhost:5000"
+echo "Sistema accesible en:"
+echo "  - Local:    http://localhost:5000"
+echo "  - Red:      http://[IP_SERVIDOR]:5000"
 echo
-echo "Presione Ctrl+C para detener el servidor"
+echo "Para detener: Presione Ctrl+C"
 echo
 
-python3 app.py
+# Iniciar aplicación
+python3 app_completo.py
 
+echo
+echo "Sistema detenido."

@@ -1,62 +1,65 @@
 @echo off
+title Sistema de Planillas - Produccion
 echo ========================================
-echo Sistema de Planillas Multiregimen Peru
+echo    SISTEMA DE PLANILLAS - PRODUCCION
 echo ========================================
 echo.
+echo Iniciando sistema...
+echo.
 
-echo Verificando Python...
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Python no esta instalado o no esta en el PATH
-    echo Por favor instale Python 3.7 o superior
+REM Verificar si existe el entorno virtual
+if not exist "venv\Scripts\activate.bat" (
+    echo ERROR: Entorno virtual no encontrado
+    echo Ejecute primero: instalar_produccion.bat
     pause
     exit /b 1
 )
 
-echo Python encontrado ✓
-echo.
+REM Activar entorno virtual
+call venv\Scripts\activate.bat
 
-echo Instalando dependencias...
-pip install -r requirements.txt
-if errorlevel 1 (
-    echo ERROR: No se pudieron instalar las dependencias
+REM Verificar Python
+python --version
+if %errorlevel% neq 0 (
+    echo ERROR: Python no encontrado
     pause
     exit /b 1
 )
 
-echo Dependencias instaladas ✓
-echo.
-
-echo Inicializando base de datos...
-python init_ultra_simple.py
-if errorlevel 1 (
-    echo ERROR: No se pudo inicializar la base de datos
+REM Verificar archivos necesarios
+if not exist "app_completo.py" (
+    echo ERROR: app_completo.py no encontrado
     pause
     exit /b 1
 )
 
-echo Base de datos inicializada ✓
-echo.
+if not exist "requirements.txt" (
+    echo ERROR: requirements.txt no encontrado
+    pause
+    exit /b 1
+)
 
-echo Saltando pruebas por ahora...
-rem python test_final.py
-rem if errorlevel 1 (
-rem     echo ADVERTENCIA: Las pruebas fallaron, pero el sistema puede funcionar
-rem     echo.
-rem )
+REM Crear directorios necesarios
+if not exist "instance" mkdir instance
+if not exist "uploads" mkdir uploads
+if not exist "backup" mkdir backup
+if not exist "logs" mkdir logs
 
 echo.
 echo ========================================
-echo Sistema listo para usar
+echo    INICIANDO SERVIDOR...
 echo ========================================
 echo.
-echo Iniciando servidor web...
-echo Abra su navegador en: http://localhost:5000
+echo Sistema accesible en:
+echo   - Local:    http://localhost:5000
+echo   - Red:      http://[IP_SERVIDOR]:5000
 echo.
-echo Presione Ctrl+C para detener el servidor
+echo Para detener: Presione Ctrl+C
 echo.
 
-python app_ultra_simple.py
+REM Iniciar aplicación
+python app_completo.py
 
+echo.
+echo Sistema detenido.
 pause
-
